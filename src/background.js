@@ -48,6 +48,12 @@ async function createWindow() {
     // Load the index.html when not in development
     await win.loadURL('app://./index.html')
   }
+  win.on('enter-full-screen',() =>{
+    console.log("进入全屏");
+  })
+  win.on('leave-full-screen',() =>{
+    console.log("退出全屏");
+  })
 }
 
 // Quit when all windows are closed.

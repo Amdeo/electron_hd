@@ -24,12 +24,13 @@
 <script>
 
 import TEST from "@/components/TEST.vue";
-// const remote = require('electron').remote;
+const remote = require('electron').remote;
+// const electron = require('electron')
 import XLSX from "xlsx";
 export default {
   name: "DataDisplay",
   components:{
-  TEST
+    TEST
   },
   data() {
     return {
@@ -176,27 +177,16 @@ export default {
     //
     // },
     toggle() {
+      const win = remote.getCurrentWindow();
+      win.autoHideMenuBar = true;
       const node = document.getElementById("tables");
-
       this.$q.fullscreen.toggle(node)
           .then(() => {
-            // success!
           })
           .catch((err) => {
             alert(err)
-            // uh, oh, error!!
-            // console.error(err)
           })
     },
-    // format_json_key(ws){
-    //   if (ws.length > 0){
-    //     for (var row of ws){
-    //       for (var col in row){
-    //
-    //       }
-    //     }
-    //   }
-    // },
     excelData_to_ui() {
       if (this.excelData.length > 0){
         for (let item of this.excelData){
