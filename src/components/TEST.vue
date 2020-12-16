@@ -1,74 +1,39 @@
 <template>
   <div class="q-pa-md">
-<!--    <q-table-->
-<!--        title="Treats"-->
-<!--        :data="data"-->
-<!--        :columns="columns"-->
-<!--        row-key="name"-->
-<!--        :separator="separator"-->
-<!--        :fullscreen ="fullscreen"-->
-<!--    >-->
-<!--      -->
-<!--    </q-table>-->
     <div class="q-pa-md">
       <q-table
-          title="Treats"
+          title="客户跟踪服务"
+          color="primary"
           :data="data"
           :columns="columns"
           row-key="name"
           :separator="separator"
           :fullscreen ="fullscreen"
+          :visible-columns="visibleColumns"
+          :card-style="cardStyle"
+          :style="tableStyle"
+          :pagination.sync="pagination_data"
+
       >
-        <template v-slot:top="props">
-          <q-btn
-              flat round dense
-              :icon="props.inFullscreen ? 'fullscreen_exit' : 'fullscreen'"
-              @click="props.toggleFullscreen"
-              class="q-ml-md full_but"
-          />
+        <template v-slot:top>
+          <div style="width: 100%;text-align: center">
+            <h5 style="margin-left: 30px;">生产跟踪</h5>
+          </div>
         </template>
-<!--        <template v-slot:body="props">-->
-<!--          <q-tr :props="props">-->
-<!--            <q-td key="name" :props="props">-->
-<!--              {{ props.row.name }}-->
-<!--            </q-td>-->
-<!--            <q-td key="calories" :props="props">-->
-<!--              <q-badge color="green">-->
-<!--                {{ props.row.calories }}-->
-<!--              </q-badge>-->
-<!--            </q-td>-->
-<!--            <q-td key="fat" :props="props">-->
-<!--              <q-badge color="purple">-->
-<!--                {{ props.row.fat }}-->
-<!--              </q-badge>-->
-<!--            </q-td>-->
-<!--            <q-td key="carbs" :props="props">-->
-<!--              <q-badge color="orange">-->
-<!--                {{ props.row.carbs }}-->
-<!--              </q-badge>-->
-<!--            </q-td>-->
-<!--            <q-td key="protein" :props="props">-->
-<!--              <q-badge color="primary">-->
-<!--                {{ props.row.protein }}-->
-<!--              </q-badge>-->
-<!--            </q-td>-->
-<!--            <q-td key="sodium" :props="props">-->
-<!--              <q-badge color="teal">-->
-<!--                {{ props.row.sodium }}-->
-<!--              </q-badge>-->
-<!--            </q-td>-->
-<!--            <q-td key="calcium" :props="props">-->
-<!--              <q-badge color="accent">-->
-<!--                {{ props.row.calcium }}-->
-<!--              </q-badge>-->
-<!--            </q-td>-->
-<!--            <q-td key="iron" :props="props">-->
-<!--              <q-badge color="amber">-->
-<!--                {{ props.row.iron }}-->
-<!--              </q-badge>-->
-<!--            </q-td>-->
-<!--          </q-tr>-->
-<!--        </template>-->
+
+        <template v-slot:bottom>
+          <div style="width: 100%;display: flex;justify-content: center">
+            <div class="row justify-center q-mt-md">
+              <q-pagination
+                  v-model="pagination_data.page"
+                  color="grey-8"
+                  :max="pagesNumber"
+                  size="sm"
+              />
+            </div>
+          </div>
+
+        </template>
       </q-table>
     </div>
   </div>
@@ -95,6 +60,31 @@ export default {
     data: {
       type: Array,
       default: null
+    },
+    visibleColumns:{
+      type: Array,
+      default: null
+    },
+    tableStyle:{
+      type: Object,
+      default: null
+    },
+    cardStyle: {
+      type: Object,
+      default: null
+    },
+    pagination: {
+      type: Object,
+      default: () => {
+        return {
+          page: 1,
+          rowsPerPage: 6
+        }
+      }
+    },
+    time: {
+      type: Number,
+      default: 5
     }
 
   },
@@ -106,10 +96,28 @@ export default {
     // console.log('resolve   : ' + resolve('./'))
     // console.log('cwd       : ' + process.cwd())
     console.log(this.tbaledata);
+    this.timer = setInterval(() => {
+      if (this.pagination_data.page === this.pagesNumber){
+        this.pagination_data.page = 1;
+      }else{
+        this.pagination_data.page++;
+      }
+    },this.time * 1000);
+  },
+  computed: {
+    pagesNumber () {
+      return Math.ceil(this.data.length / this.pagination.rowsPerPage)
+    }
+  },
+  beforeDestroy() {
+    clearInterval(this.timer);
+    this.timer = null;
   },
   data () {
     return {
-      tbaledata: this.data
+      tbaledata: this.data,
+      pagination_data: this.pagination,
+      timer: null
     }
   }
 }

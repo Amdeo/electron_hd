@@ -1,23 +1,55 @@
 <template>
   <div class="DataDisplay">
-    <TEST id="tables" :separator="separatorValue" :columns="columns" :data="TableData"></TEST>
+    <TEST id="tables" :time="time" :pagination="pagination" :fullscreen="fullscreen" :separator="separatorValue" :columns="columns" :data="TableData" :visibleColumns="visibleColumns"></TEST>
     <div class="buts">
       <q-btn style="margin-right: 1vh" color="deep-orange" glossy label="返回" size="20px" @click="ToHome"/>
       <q-btn style="margin-left: 1vh" color="secondary" glossy :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'"
              :label="$q.fullscreen.isActive ? '退出全屏' : '进入全屏'"  size="20px" @click="toggle"/>
     </div>
-<!--    <q-btn  color="deep-orange" glossy label="返回" size="20px" @click="scale"/>-->
+    <h5>列可见</h5>
+    <div>
+      <q-toggle v-model="visibleColumns" val="客户名称" label="客户名称" />
+      <q-toggle v-model="visibleColumns" val="状态" label="状态" />
+      <q-toggle v-model="visibleColumns" val="出货名称" label="出货名称" />
+      <q-toggle v-model="visibleColumns" val="数量" label="数量" />
+      <q-toggle v-model="visibleColumns" val="交货日期" label="交货日期" />
+      <q-toggle v-model="visibleColumns" val="运输方式" label="运输方式" />
+      <q-toggle v-model="visibleColumns" val="付款方式" label="付款方式" />
+      <q-toggle v-model="visibleColumns" val="到款情况" label="到款情况" />
+      <q-toggle v-model="visibleColumns" val="配置清单" label="配置清单" />
+      <q-toggle v-model="visibleColumns" val="目前生产状态" label="目前生产状态" />
+      <q-toggle v-model="visibleColumns" val="备注" label="备注" />
+    </div>
+    <h5>表格模式选择</h5>
     <q-option-group
         v-model="separatorValue"
         inline
         class="q-mb-md"
         :options="[
+
         { label: 'Horizontal (default)', value: 'horizontal' },
         { label: 'Vertical', value: 'vertical' },
         { label: 'Cell', value: 'cell' },
         { label: 'None', value: 'none' },
       ]"
     />
+    <q-btn label="间隔时间(s)" color="primary" @click="prompt = true" />
+    <q-dialog v-model="prompt" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section>
+          <div class="text-h6">间隔时间设置(s)</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <q-input type="number" dense v-model.number="time" autofocus @keyup.enter="prompt = false" />
+        </q-card-section>
+
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="取消" v-close-popup />
+          <q-btn flat label="确定" v-close-popup @click="refresh"/>
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
@@ -25,6 +57,7 @@
 
 import TEST from "@/components/TEST.vue";
 const remote = require('electron').remote;
+const ipcRenderer = require('electron').ipcRenderer;
 // const electron = require('electron')
 import XLSX from "xlsx";
 export default {
@@ -37,6 +70,7 @@ export default {
       separatorValue: "horizontal",
       filePath : "",
       excelData: [],
+      fullscreen: false,
       columns: [
         {
           name: '客户名称',
@@ -124,8 +158,26 @@ export default {
           style: 'width: 200px;white-space:normal',
         }
       ],
-      TableData: []
+      TableData: [],
+      visibleColumns: ["客户名称","状态","出货名称","数量","交货日期","运输方式","付款方式","到款情况","配置清单","目前生产状态","备注"],
+      pagination: {
+        page: 1,
+        rowsPerPage: 6
+      },
+      time: 5,
+      prompt: false
     }
+  },
+  created() {
+    // ipcRenderer.on('full-screen',(event,message) => {
+    //     // console.log(message);
+    //     // this.fullscreen = message;
+    // });
+    ipcRenderer.on('exit-full-screen',(event,message) => {
+        this.fullscreen = message;
+      // const win = remote.getCurrentWindow();
+      // win.autoHideMenuBar = false;
+    })
   },
   mounted() {
     // 获取文件路径
@@ -147,7 +199,13 @@ export default {
             let newcol = col;
             newcol = newcol.replace(/^(\s|\u00A0)+/, '').replace(/(\s|\u00A0)+$/, '');
             // console.log(col);
-            new_item[newcol] = item[col];
+            let value = item[col];
+            // console.log(typeof item[col]);
+            if (col === "交货日期" && typeof(item[col]) === "number"){
+              // console.log(item[col]);
+              value = this.formatDate(item[col])
+            }
+            new_item[newcol] = value;
           }
           return new_item;
         })
@@ -156,6 +214,7 @@ export default {
         this.excelData = Newws;
         // console.log(this.excelData);
         this.excelData_to_ui();
+        this
       }
       catch(err){
         console.log(err);
@@ -171,30 +230,33 @@ export default {
     ToHome() {
       this.$router.push("/");
     },
-    // scale(){
-    //   const win = remote.getCurrentWindow();
-    //   win.webContents.setZoomLevel(0);
-    //
-    // },
     toggle() {
+      this.fullscreen = true;
+      // var that = this;
       const win = remote.getCurrentWindow();
-      win.autoHideMenuBar = true;
-      const node = document.getElementById("tables");
-      this.$q.fullscreen.toggle(node)
-          .then(() => {
-          })
-          .catch((err) => {
-            alert(err)
-          })
+      // win.autoHideMenuBar = true;
+      win.setFullScreen(true);
+      // setTimeout(function(){
+      //   const win = remote.getCurrentWindow();
+      //   win.autoHideMenuBar = true;
+      //   const node = document.getElementById("tables");
+      //   that.$q.fullscreen.toggle(node)
+      //       .then(() => {
+      //       })
+      //       .catch((err) => {
+      //         alert(err)
+      //       })
+      // },500);
     },
     excelData_to_ui() {
+      // 判断excel数据存在
       if (this.excelData.length > 0){
+        // 遍历excel数据
         for (let item of this.excelData){
-          // console.log(item);
           let temp = {};
+          // 遍历列名
           for (let col of this.columns) {
-            // console.log('item',item);
-            // console.log('col',col)
+            // 判断key存在
             if (Object.prototype.hasOwnProperty.call(item,col.label)){
               temp[col.label] = item[col.label];
             }else{
@@ -228,9 +290,10 @@ export default {
                     if (Object.prototype.hasOwnProperty.call(this.TableData[this.TableData.length - 1],"状态")){
                       temp[col.label] = this.TableData[this.TableData.length - 1]["状态"];
                     }
+                  }else{
+                    temp[col.label] = "";
                   }
                 }
-
               }else{
                 if (this.TableData.length > 0){
                   if (Object.prototype.hasOwnProperty.call(this.TableData[this.TableData.length - 1],col.label)) {
@@ -260,6 +323,23 @@ export default {
           this.TableData.push(temp);
         }
       }
+    },
+    formatDate(numb, format) {
+      const time = new Date((numb - 1) * 24 * 3600000 + 1)
+      time.setYear(time.getFullYear() - 70)
+      const year = time.getFullYear() + ''
+      const month = time.getMonth() + 1 + ''
+      const date = time.getDate() - 1 + ''
+      if (format && format.length === 1) {
+        return `${year}年format${month}月format${date}日`
+      }
+      return year + "年" +(month < 10 ? '0' + month : month) + "月" + (date < 10 ? '0' + date : date) + "日";
+    },
+    refresh(){
+      // 刷新页面
+      // const win = remote.getCurrentWindow();
+      // win.webContents.reload();
+      this.$router.go(0);
     }
   }
 }

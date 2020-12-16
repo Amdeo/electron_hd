@@ -26,24 +26,10 @@ export default {
   data() {
     return {
       text: "",
-
     }
   },
   mounted() {
-    // const workbook =  XLSX.readFile("/Users/looper/Desktop/上海诺瑞实验设备有限公司11-23-03.xlsx");
-    // console.log(workbook);
-    // const wsname = workbook.SheetNames[0];
-    // console.log(wsname);
-    // // console.log(workbook['A1']);
-    // const worksheet = workbook.Sheets[wsname];
-    // console.log(worksheet['A1'].v);
-
-    // const ws = XLSX.utils.sheet_to_json(workbook.Sheets[wsname]);
-    // console.log(ws);
-    // for (let i = 0; i < ws.length; i++) {
-    //   let sheetData = ws[i] // 对数据自行操作
-    //   console.log(sheetData);
-    // }
+    this.text = this.$store.state.filepath;
   },
   methods: {
     openfile() {

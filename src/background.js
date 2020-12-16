@@ -3,7 +3,9 @@
 import {
   app,
   protocol,
-  BrowserWindow
+  BrowserWindow,
+  Menu,
+  globalShortcut
 } from 'electron'
 import {
   createProtocol
@@ -48,11 +50,18 @@ async function createWindow() {
     // Load the index.html when not in development
     await win.loadURL('app://./index.html')
   }
+
+  globalShortcut.register('ESC', () => {
+    win.setFullScreen(false);
+  })
+
   win.on('enter-full-screen',() =>{
-    console.log("进入全屏");
+    win.menuBarVisible = false;
+    win.webContents.send('full-screen',true);
   })
   win.on('leave-full-screen',() =>{
-    console.log("退出全屏");
+    win.webContents.send('exit-full-screen',false);
+    win.menuBarVisible = true;
   })
 }
 
