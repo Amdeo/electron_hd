@@ -95,8 +95,10 @@ export default {
     // console.log('__dirname : ' + __dirname)
     // console.log('resolve   : ' + resolve('./'))
     // console.log('cwd       : ' + process.cwd())
-    console.log(this.tbaledata);
+    // console.log(this.tbaledata);
+    console.log('time',this.time);
     this.timer = setInterval(() => {
+      // console.log('time',this.time);
       if (this.pagination_data.page === this.pagesNumber){
         this.pagination_data.page = 1;
       }else{

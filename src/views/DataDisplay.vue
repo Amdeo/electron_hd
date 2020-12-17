@@ -1,24 +1,26 @@
 <template>
   <div class="DataDisplay">
-    <TEST id="tables" :time="time" :pagination="pagination" :fullscreen="fullscreen" :separator="separatorValue" :columns="columns" :data="TableData" :visibleColumns="visibleColumns"></TEST>
-    <div class="buts">
-      <q-btn style="margin-right: 1vh" color="deep-orange" glossy label="返回" size="20px" @click="ToHome"/>
-      <q-btn style="margin-left: 1vh" color="secondary" glossy :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'"
-             :label="$q.fullscreen.isActive ? '退出全屏' : '进入全屏'"  size="20px" @click="toggle"/>
+    <TEST id="tables" v-if="Refresh && time"  :time="time" :pagination="pagination" :fullscreen="fullscreen" :separator="separatorValue"
+          :columns="columns" :data="TableData" :visibleColumns="visibleColumns"></TEST>
+    <div class="right-bottom-buts">
+      <q-btn style="margin-bottom: 20px;" class="glossy" round color="deep-orange" icon="keyboard_arrow_left"
+             @click="ToHome"/>
+      <q-btn style="margin-bottom: 20px;" class="glossy" round color="secondary"
+             :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'" @click="toggle"/>
     </div>
     <h5>列可见</h5>
     <div>
-      <q-toggle v-model="visibleColumns" val="客户名称" label="客户名称" />
-      <q-toggle v-model="visibleColumns" val="状态" label="状态" />
-      <q-toggle v-model="visibleColumns" val="出货名称" label="出货名称" />
-      <q-toggle v-model="visibleColumns" val="数量" label="数量" />
-      <q-toggle v-model="visibleColumns" val="交货日期" label="交货日期" />
-      <q-toggle v-model="visibleColumns" val="运输方式" label="运输方式" />
-      <q-toggle v-model="visibleColumns" val="付款方式" label="付款方式" />
-      <q-toggle v-model="visibleColumns" val="到款情况" label="到款情况" />
-      <q-toggle v-model="visibleColumns" val="配置清单" label="配置清单" />
-      <q-toggle v-model="visibleColumns" val="目前生产状态" label="目前生产状态" />
-      <q-toggle v-model="visibleColumns" val="备注" label="备注" />
+      <q-toggle v-model="visibleColumns" val="客户名称" label="客户名称"/>
+      <q-toggle v-model="visibleColumns" val="状态" label="状态"/>
+      <q-toggle v-model="visibleColumns" val="出货名称" label="出货名称"/>
+      <q-toggle v-model="visibleColumns" val="数量" label="数量"/>
+      <q-toggle v-model="visibleColumns" val="交货日期" label="交货日期"/>
+      <q-toggle v-model="visibleColumns" val="运输方式" label="运输方式"/>
+      <q-toggle v-model="visibleColumns" val="付款方式" label="付款方式"/>
+      <q-toggle v-model="visibleColumns" val="到款情况" label="到款情况"/>
+      <q-toggle v-model="visibleColumns" val="配置清单" label="配置清单"/>
+      <q-toggle v-model="visibleColumns" val="目前生产状态" label="目前生产状态"/>
+      <q-toggle v-model="visibleColumns" val="备注" label="备注"/>
     </div>
     <h5>表格模式选择</h5>
     <q-option-group
@@ -33,19 +35,34 @@
         { label: 'None', value: 'none' },
       ]"
     />
-    <q-btn label="间隔时间(s)" color="primary" @click="prompt = true" />
+    <q-btn label="间隔时间(s)" color="primary" @click="prompt = true"/>
+    <q-btn style="margin-left: 20px" label="行数" color="primary" @click="prompt1 = true"/>
     <q-dialog v-model="prompt" persistent>
       <q-card style="min-width: 350px">
         <q-card-section>
           <div class="text-h6">间隔时间设置(s)</div>
         </q-card-section>
+        <q-card-section class="q-pt-none">
+          <q-input type="number" dense v-model.number="time" autofocus @keyup.enter="prompt = false"/>
+        </q-card-section>
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="取消" v-close-popup/>
+          <q-btn flat label="确定" v-close-popup @click="refresh"/>
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+    <q-dialog v-model="prompt1" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section>
+          <div class="text-h6">行数</div>
+        </q-card-section>
 
         <q-card-section class="q-pt-none">
-          <q-input type="number" dense v-model.number="time" autofocus @keyup.enter="prompt = false" />
+          <q-input type="number" dense v-model.number="pagination.rowsPerPage" autofocus @keyup.enter="prompt1 = false"/>
         </q-card-section>
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="取消" v-close-popup />
+          <q-btn flat label="取消" v-close-popup/>
           <q-btn flat label="确定" v-close-popup @click="refresh"/>
         </q-card-actions>
       </q-card>
@@ -56,19 +73,20 @@
 <script>
 
 import TEST from "@/components/TEST.vue";
+
 const remote = require('electron').remote;
 const ipcRenderer = require('electron').ipcRenderer;
-// const electron = require('electron')
 import XLSX from "xlsx";
+
 export default {
   name: "DataDisplay",
-  components:{
+  components: {
     TEST
   },
   data() {
     return {
       separatorValue: "horizontal",
-      filePath : "",
+      filePath: "",
       excelData: [],
       fullscreen: false,
       columns: [
@@ -159,13 +177,15 @@ export default {
         }
       ],
       TableData: [],
-      visibleColumns: ["客户名称","状态","出货名称","数量","交货日期","运输方式","付款方式","到款情况","配置清单","目前生产状态","备注"],
+      visibleColumns: ["客户名称", "状态", "出货名称", "数量", "交货日期", "运输方式", "付款方式", "到款情况", "配置清单", "目前生产状态", "备注"],
       pagination: {
         page: 1,
         rowsPerPage: 6
       },
-      time: 5,
-      prompt: false
+      time: null,
+      prompt: false,
+      prompt1: false,
+      Refresh: true,
     }
   },
   created() {
@@ -173,8 +193,8 @@ export default {
     //     // console.log(message);
     //     // this.fullscreen = message;
     // });
-    ipcRenderer.on('exit-full-screen',(event,message) => {
-        this.fullscreen = message;
+    ipcRenderer.on('exit-full-screen', (event, message) => {
+      this.fullscreen = message;
       // const win = remote.getCurrentWindow();
       // win.autoHideMenuBar = false;
     })
@@ -182,12 +202,22 @@ export default {
   mounted() {
     // 获取文件路径
     this.filePath = this.$store.state.filepath;
+    const timeInterval = localStorage.getItem("timeInterval");
+    if (timeInterval) {
+      this.time = Number(timeInterval);
+    }
+
+    const col_num = localStorage.getItem("col_num");
+    if (col_num) {
+      this.pagination.rowsPerPage = col_num;
+    }
+
     console.log(this.filePath);
     if (this.filePath === "") {
       this.$router.push("/")
-    }else{
-      try{
-        const workbook =  XLSX.readFile(this.filePath,{cellDates: true});
+    } else {
+      try {
+        const workbook = XLSX.readFile(this.filePath, {cellDates: true});
         // console.log(workbook),
         const wsname = workbook.SheetNames[0];
         // console.log(wsname);
@@ -201,7 +231,7 @@ export default {
             // console.log(col);
             let value = item[col];
             // console.log(typeof item[col]);
-            if (col === "交货日期" && typeof(item[col]) === "number"){
+            if (col === "交货日期" && typeof (item[col]) === "number") {
               // console.log(item[col]);
               value = this.formatDate(item[col])
             }
@@ -210,16 +240,15 @@ export default {
           return new_item;
         })
         console.log(Newws);
-        this.$store.commit("setExcelData",Newws);
+        this.$store.commit("setExcelData", Newws);
         this.excelData = Newws;
         // console.log(this.excelData);
         this.excelData_to_ui();
         this
-      }
-      catch(err){
+      } catch (err) {
         console.log(err);
         alert(err);
-        if (String(err).indexOf("no such file or directory") !== -1){
+        if (String(err).indexOf("no such file or directory") !== -1) {
           alert("不是有效文件,请重新选择");
           this.$router.push("/")
         }
@@ -250,33 +279,33 @@ export default {
     },
     excelData_to_ui() {
       // 判断excel数据存在
-      if (this.excelData.length > 0){
+      if (this.excelData.length > 0) {
         // 遍历excel数据
-        for (let item of this.excelData){
+        for (let item of this.excelData) {
           let temp = {};
           // 遍历列名
           for (let col of this.columns) {
             // 判断key存在
-            if (Object.prototype.hasOwnProperty.call(item,col.label)){
+            if (Object.prototype.hasOwnProperty.call(item, col.label)) {
               temp[col.label] = item[col.label];
-            }else{
+            } else {
               if (col.label === "状态") {
                 do {
-                  if (Object.prototype.hasOwnProperty.call(item,"正常")) {
+                  if (Object.prototype.hasOwnProperty.call(item, "正常")) {
                     if (item["正常"] === "是") {
                       temp["状态"] = "正常";
                       break;
                     }
                   }
 
-                  if (Object.prototype.hasOwnProperty.call(item,"可能延期")) {
+                  if (Object.prototype.hasOwnProperty.call(item, "可能延期")) {
                     if (item["可能延期"] === "是") {
                       temp["状态"] = "可能延期";
                       break;
                     }
                   }
 
-                  if (Object.prototype.hasOwnProperty.call(item,"确定延期")) {
+                  if (Object.prototype.hasOwnProperty.call(item, "确定延期")) {
                     if (item["确定延期"] === "是") {
                       temp["状态"] = "确定延期";
                       break;
@@ -284,37 +313,36 @@ export default {
                   }
 
                   // eslint-disable-next-line no-constant-condition
-                }while(false);
-                if (!Object.prototype.hasOwnProperty.call(temp,"状态")) {
-                  if (this.TableData.length > 0){
-                    if (Object.prototype.hasOwnProperty.call(this.TableData[this.TableData.length - 1],"状态")){
+                } while (false);
+                if (!Object.prototype.hasOwnProperty.call(temp, "状态")) {
+                  if (this.TableData.length > 0) {
+                    if (Object.prototype.hasOwnProperty.call(this.TableData[this.TableData.length - 1], "状态")) {
                       temp[col.label] = this.TableData[this.TableData.length - 1]["状态"];
                     }
-                  }else{
+                  } else {
                     temp[col.label] = "";
                   }
                 }
-              }else{
-                if (this.TableData.length > 0){
-                  if (Object.prototype.hasOwnProperty.call(this.TableData[this.TableData.length - 1],col.label)) {
+              } else {
+                if (this.TableData.length > 0) {
+                  if (Object.prototype.hasOwnProperty.call(this.TableData[this.TableData.length - 1], col.label)) {
                     // 客户名称，直接去上一行的
-                    if (col.label === "客户名称"){
+                    if (col.label === "客户名称") {
                       temp[col.label] = this.TableData[this.TableData.length - 1][col.label];
-                    }
-                    else{
+                    } else {
                       //要求客户名称一样才可以拷贝
-                      if (this.TableData[this.TableData.length - 1]["客户名称"] === temp["客户名称"]){
+                      if (this.TableData[this.TableData.length - 1]["客户名称"] === temp["客户名称"]) {
                         temp[col.label] = this.TableData[this.TableData.length - 1][col.label];
                       }
                     }
-                  }else{
+                  } else {
                     temp[col.label] = ""
                   }
-                }else{
+                } else {
                   temp[col.label] = ""
                 }
 
-                if (!Object.prototype.hasOwnProperty.call(temp,col.label)){
+                if (!Object.prototype.hasOwnProperty.call(temp, col.label)) {
                   temp[col.label] = ""
                 }
               }
@@ -333,37 +361,58 @@ export default {
       if (format && format.length === 1) {
         return `${year}年format${month}月format${date}日`
       }
-      return year + "年" +(month < 10 ? '0' + month : month) + "月" + (date < 10 ? '0' + date : date) + "日";
+      return year + "年" + (month < 10 ? '0' + month : month) + "月" + (date < 10 ? '0' + date : date) + "日";
     },
-    refresh(){
+    refresh() {
       // 刷新页面
+      localStorage.setItem("timeInterval", this.time);
+      localStorage.setItem("col_num",this.pagination.rowsPerPage);
+      this.Refresh = false;
+      this.$nextTick(() => {
+        this.Refresh = true;
+      })
       // const win = remote.getCurrentWindow();
       // win.webContents.reload();
-      this.$router.go(0);
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.DataDisplay{
-  width:100%;
-  height:100%;
+.DataDisplay {
+  width: 100%;
+  height: 100%;
   //background-color:#C10015;
-  #tables{
+  //display: flex;
+  //flex-direction: column;
+  //justify-content:center;
+  text-align: center;
+  #tables {
     background-color: #fff;
   }
+
   .buts {
-    width:40%;
-    height:100px;
+    width: 40%;
+    height: 100px;
     position: fixed;
-    left:0;
-    right:0;
-    top:0;
+    left: 0;
+    right: 0;
+    top: 0;
     bottom: 0;
-    margin-top:auto;
-    margin-left:auto;
-    margin-right:auto;
+    margin-top: auto;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .right-bottom-buts {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    width: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 20px;
   }
 }
 </style>

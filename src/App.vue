@@ -4,6 +4,29 @@
   </div>
 </template>
 
+<script>
+export default {
+  name: "App",
+  components: {},
+  created() {
+    // 刷新页面后，重新冲seesion中加在
+    if (sessionStorage.getItem("state")) {
+      this.$store.replaceState(
+          Object.assign(
+              {},
+              this.$store.state,
+              JSON.parse(sessionStorage.getItem("state"))
+          )
+      );
+    }
+    //监听页面刷新
+    window.addEventListener("beforeunload", () => {
+      sessionStorage.setItem("state", JSON.stringify(this.$store.state));
+    });
+  }
+};
+</script>
+
 <style lang="scss">
 body {
   height: 100%;
