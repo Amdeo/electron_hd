@@ -1,6 +1,7 @@
 <template>
   <div class="DataDisplay">
-    <TEST id="tables" v-if="Refresh && time"  :time="time" :pagination="pagination" :fullscreen="fullscreen" :separator="separatorValue"
+    <TEST id="tables" v-if="Refresh && time" :time="time" :pagination="pagination" :fullscreen="fullscreen"
+          :separator="separatorValue"
           :columns="columns" :data="TableData" :visibleColumns="visibleColumns"></TEST>
     <div class="right-bottom-buts">
       <q-btn style="margin-bottom: 20px;" class="glossy" round color="deep-orange" icon="keyboard_arrow_left"
@@ -37,6 +38,7 @@
     />
     <q-btn label="间隔时间(s)" color="primary" @click="prompt = true"/>
     <q-btn style="margin-left: 20px" label="行数" color="primary" @click="prompt1 = true"/>
+    <q-btn style="margin-left: 20px" label="文件刷新时间" color="primary" @click="prompt2 = true"/>
     <q-dialog v-model="prompt" persistent>
       <q-card style="min-width: 350px">
         <q-card-section>
@@ -58,12 +60,30 @@
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-          <q-input type="number" dense v-model.number="pagination.rowsPerPage" autofocus @keyup.enter="prompt1 = false"/>
+          <q-input type="number" dense v-model.number="pagination.rowsPerPage" autofocus
+                   @keyup.enter="prompt1 = false"/>
         </q-card-section>
 
         <q-card-actions align="right" class="text-primary">
           <q-btn flat label="取消" v-close-popup/>
           <q-btn flat label="确定" v-close-popup @click="refresh"/>
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+    <q-dialog v-model="prompt2" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section>
+          <div class="text-h6">刷新时间(分钟)</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <q-input type="number" dense v-model.number="reload_time" autofocus
+                   @keyup.enter="prompt2 = false"/>
+        </q-card-section>
+
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="取消" v-close-popup/>
+          <q-btn flat label="确定" v-close-popup @click="pageRefresh"/>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -185,7 +205,10 @@ export default {
       time: null,
       prompt: false,
       prompt1: false,
+      prompt2: false,
       Refresh: true,
+      reload_timer: null,
+      reload_time: null
     }
   },
   created() {
@@ -200,6 +223,21 @@ export default {
     })
   },
   mounted() {
+    // this.reload_time = this.$store.state.page_refresh_time;
+    let reload_time = localStorage.getItem("pageRefreshTime");
+    if (!reload_time) {
+      this.reload_time = 30;
+    }
+    this.reload_time = reload_time;
+    const win = remote.getCurrentWindow();
+    if (!this.reload_timer) {
+      if (this.reload_time) {
+        console.log(`${this.reload_time}分钟刷新一次`);
+        this.reload_timer = setInterval(() => {
+          win.webContents.reload();
+        }, this.reload_time * 60 * 1000);
+      }
+    }
     // 获取文件路径
     this.filePath = this.$store.state.filepath;
     const timeInterval = localStorage.getItem("timeInterval");
@@ -255,27 +293,18 @@ export default {
       }
     }
   },
+  beforeDestroy() {
+    clearInterval(this.reload_timer);
+    this.reload_timer = null;
+  },
   methods: {
     ToHome() {
       this.$router.push("/");
     },
     toggle() {
       this.fullscreen = true;
-      // var that = this;
       const win = remote.getCurrentWindow();
-      // win.autoHideMenuBar = true;
       win.setFullScreen(true);
-      // setTimeout(function(){
-      //   const win = remote.getCurrentWindow();
-      //   win.autoHideMenuBar = true;
-      //   const node = document.getElementById("tables");
-      //   that.$q.fullscreen.toggle(node)
-      //       .then(() => {
-      //       })
-      //       .catch((err) => {
-      //         alert(err)
-      //       })
-      // },500);
     },
     excelData_to_ui() {
       // 判断excel数据存在
@@ -366,13 +395,22 @@ export default {
     refresh() {
       // 刷新页面
       localStorage.setItem("timeInterval", this.time);
-      localStorage.setItem("col_num",this.pagination.rowsPerPage);
+      localStorage.setItem("col_num", this.pagination.rowsPerPage);
       this.Refresh = false;
       this.$nextTick(() => {
         this.Refresh = true;
       })
       // const win = remote.getCurrentWindow();
       // win.webContents.reload();
+    },
+    pageRefresh() {
+      // this.$store.commit("setpageRefreshTime", this.reload_time);
+      // localStorage.setItem("timeInterval", this.time);
+      localStorage.setItem("pageRefreshTime", this.reload_time);
+      clearInterval(this.reload_timer);
+      this.reload_timer = null;
+      const win = remote.getCurrentWindow();
+      win.webContents.reload();
     }
   }
 }
@@ -387,6 +425,7 @@ export default {
   //flex-direction: column;
   //justify-content:center;
   text-align: center;
+
   #tables {
     background-color: #fff;
   }

@@ -8,7 +8,7 @@
           :columns="columns"
           row-key="name"
           :separator="separator"
-          :fullscreen ="fullscreen"
+          :fullscreen="fullscreen"
           :visible-columns="visibleColumns"
           :card-style="cardStyle"
           :style="tableStyle"
@@ -61,11 +61,11 @@ export default {
       type: Array,
       default: null
     },
-    visibleColumns:{
+    visibleColumns: {
       type: Array,
       default: null
     },
-    tableStyle:{
+    tableStyle: {
       type: Object,
       default: null
     },
@@ -96,18 +96,18 @@ export default {
     // console.log('resolve   : ' + resolve('./'))
     // console.log('cwd       : ' + process.cwd())
     // console.log(this.tbaledata);
-    console.log('time',this.time);
+    console.log('time', this.time);
     this.timer = setInterval(() => {
       // console.log('time',this.time);
-      if (this.pagination_data.page === this.pagesNumber){
+      if (this.pagination_data.page === this.pagesNumber) {
         this.pagination_data.page = 1;
-      }else{
+      } else {
         this.pagination_data.page++;
       }
-    },this.time * 1000);
+    }, this.time * 1000);
   },
   computed: {
-    pagesNumber () {
+    pagesNumber() {
       return Math.ceil(this.data.length / this.pagination.rowsPerPage)
     }
   },
@@ -115,7 +115,7 @@ export default {
     clearInterval(this.timer);
     this.timer = null;
   },
-  data () {
+  data() {
     return {
       tbaledata: this.data,
       pagination_data: this.pagination,
@@ -126,11 +126,11 @@ export default {
 </script>
 
 <style scoped>
-.full_but{
+.full_but {
   opacity: 0;
 }
 
-.full_but:hover{
+.full_but:hover {
   opacity: 1;
 }
 </style>
