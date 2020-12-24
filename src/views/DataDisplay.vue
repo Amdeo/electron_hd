@@ -224,11 +224,8 @@ export default {
   },
   mounted() {
     // this.reload_time = this.$store.state.page_refresh_time;
-    let reload_time = localStorage.getItem("pageRefreshTime");
-    if (!reload_time) {
-      this.reload_time = 30;
-    }
-    this.reload_time = reload_time;
+    this.getLocalStorageScoped();
+
     const win = remote.getCurrentWindow();
     if (!this.reload_timer) {
       if (this.reload_time) {
@@ -240,15 +237,6 @@ export default {
     }
     // 获取文件路径
     this.filePath = this.$store.state.filepath;
-    const timeInterval = localStorage.getItem("timeInterval");
-    if (timeInterval) {
-      this.time = Number(timeInterval);
-    }
-
-    const col_num = localStorage.getItem("col_num");
-    if (col_num) {
-      this.pagination.rowsPerPage = col_num;
-    }
 
     console.log(this.filePath);
     if (this.filePath === "") {
@@ -406,11 +394,39 @@ export default {
     pageRefresh() {
       // this.$store.commit("setpageRefreshTime", this.reload_time);
       // localStorage.setItem("timeInterval", this.time);
-      localStorage.setItem("pageRefreshTime", this.reload_time);
+      // localStorage.setItem("pageRefreshTime", this.reload_time);
+      this.setLocalStorageScoped();
       clearInterval(this.reload_timer);
       this.reload_timer = null;
       const win = remote.getCurrentWindow();
       win.webContents.reload();
+    },
+    getLocalStorageScoped() {
+      let reload_time = localStorage.getItem("pageRefreshTime");
+      if (!reload_time) {
+        this.reload_time = 30;
+      } else {
+        this.reload_time = reload_time;
+      }
+
+      const timeInterval = localStorage.getItem("timeInterval");
+      if (timeInterval) {
+        this.time = Number(timeInterval);
+      } else {
+        this.time = 5;
+      }
+
+      const col_num = localStorage.getItem("col_num");
+      if (col_num) {
+        this.pagination.rowsPerPage = col_num;
+      } else {
+        this.pagination.rowsPerPage = 6;
+      }
+    },
+    setLocalStorageScoped(){
+      localStorage.setItem("pageRefreshTime", this.reload_time);
+      localStorage.setItem("timeInterval", this.time);
+      localStorage.setItem("col_num", this.pagination.rowsPerPage);
     }
   }
 }
