@@ -41,12 +41,16 @@ module.exports = {
           'installerHeaderIcon': './public/cat.ico', // 安装时头部图标
           'createDesktopShortcut': true, // 创建桌面图标
           'createStartMenuShortcut': true, // 创建开始菜单图标
-          'shortcutName': 'wyDemo' // 图标名称(项目名称)
+          'shortcutName': '生产跟踪' // 图标名称(项目名称)
         }
       }
     }
   },
   transpileDependencies: [
     'quasar'
-  ]
+  ],
+  pages: {
+    index: 'src/main.js',
+    setting: 'src/pages/setting/main.js'
+  }
 }

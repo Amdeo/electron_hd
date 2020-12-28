@@ -5,6 +5,7 @@ import {
     protocol,
     BrowserWindow,
     Menu,
+    ipcMain,
     globalShortcut
 } from 'electron'
 import {
@@ -24,13 +25,15 @@ protocol.registerSchemesAsPrivileged([{
         standard: true
     }
 }])
+let mainWindow;
+let settingWindow;
 
 async function createWindow() {
     // Create the browser window.
     // console.log(path.join(path.resolve('./'), '/src/preload.js'));
-    const win = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 1800,
-        height: 1200,
+        height: 800,
         webPreferences: {
             // Use pluginOptions.nodeIntegration, leave this alone
             // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
@@ -43,27 +46,71 @@ async function createWindow() {
     // console.log(process.env.ELECTRON_NODE_INTEGRATION);
     if (process.env.WEBPACK_DEV_SERVER_URL) {
         // Load the url of the dev server if in development mode
-        await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-        if (!process.env.IS_TEST) win.webContents.openDevTools()
+        await mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+        if (!process.env.IS_TEST) mainWindow.webContents.openDevTools()
     } else {
         createProtocol('app')
         // Load the index.html when not in development
-        await win.loadURL('app://./index.html')
+        await mainWindow.loadURL('app://./index.html')
     }
 
     globalShortcut.register('ESC', () => {
-        win.setFullScreen(false);
+        mainWindow.setFullScreen(false);
     })
 
-    win.on('enter-full-screen', () => {
-        win.menuBarVisible = false;
-        win.webContents.send('full-screen', true);
+    mainWindow.on('enter-full-screen', () => {
+        mainWindow.menuBarVisible = false;
+        mainWindow.webContents.send('full-screen', true);
     })
-    win.on('leave-full-screen', () => {
-        win.webContents.send('exit-full-screen', false);
-        win.menuBarVisible = true;
+    mainWindow.on('leave-full-screen', () => {
+        mainWindow.webContents.send('exit-full-screen', false);
+        mainWindow.menuBarVisible = true;
     })
 }
+
+// 打开设置
+ipcMain.on('openSetting', (event,arg) => {
+    // console.log(arg)
+    settingWindow = new BrowserWindow({
+        title: "设置",
+        width: 800,
+        height: 800,
+        parent: mainWindow,
+        frame: true,  //是否显示默认工具栏
+        show: false,
+        webPreferences: {
+            nodeIntegration: true,
+            enableRemoteModule: true
+        }
+    })
+    if (process.env.WEBPACK_DEV_SERVER_URL) {
+        // Load the url of the dev server if in development mode
+        settingWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL + 'setting')
+        if (!process.env.IS_TEST) mainWindow.webContents.openDevTools()
+    } else {
+        // Load the index.html when not in development
+        settingWindow.loadURL('app://./setting.html')
+    }
+
+    settingWindow.once("ready-to-show", () => {
+        settingWindow.show();
+    });
+
+    settingWindow.once("show", function() {
+        settingWindow.webContents.send('fromParentData', arg);
+    });
+})
+
+//关闭设置窗口
+ipcMain.on('close_settings', () => {
+    settingWindow.close();
+})
+
+// 设置窗口确认
+ipcMain.on('confirm',() => {
+    settingWindow.close();
+    mainWindow.webContents.reload();
+})
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
@@ -84,14 +131,14 @@ app.on('activate', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-    // if (isDevelopment && !process.env.IS_TEST) {
-    //   // Install Vue Devtools
-    //   try {
-    //     await installExtension(VUEJS_DEVTOOLS)
-    //   } catch (e) {
-    //     console.error('Vue Devtools failed to install:', e.toString())
-    //   }
-    // }
+    if (isDevelopment && !process.env.IS_TEST) {
+      // Install Vue Devtools
+      try {
+        await installExtension(VUEJS_DEVTOOLS)
+      } catch (e) {
+        console.error('Vue Devtools failed to install:', e.toString())
+      }
+    }
     createWindow()
 })
 

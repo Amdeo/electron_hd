@@ -13,7 +13,7 @@
 
 <script>
 // @ is an alias to /src
-// import TEST from "@/components/TEST.vue";
+// import TEST from "@/components/myTable.vue";
 // import XLSX from "xlsx";
 
 
@@ -29,7 +29,7 @@ export default {
     }
   },
   mounted() {
-    this.text = this.$store.state.filepath;
+    this.text = localStorage.getItem("filePath");
   },
   methods: {
     openfile() {
@@ -48,7 +48,7 @@ export default {
       })
     },
     toDataDisplay() {
-      this.$store.commit("setFilePath", this.text);
+      localStorage.setItem("filePath", this.text);
       this.$router.push("/DataDisplay");
     }
   }

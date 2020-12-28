@@ -3,7 +3,7 @@
     <div class="q-pa-md">
       <q-table
           title="客户跟踪服务"
-          color="primary"
+          color="amber"
           :data="data"
           :columns="columns"
           row-key="name"
@@ -11,15 +11,21 @@
           :fullscreen="fullscreen"
           :visible-columns="visibleColumns"
           :card-style="cardStyle"
-          :style="tableStyle"
+          :table-style="tableStyle"
+          style=""
           :pagination.sync="pagination_data"
-
       >
         <template v-slot:top>
-          <div style="width: 100%;text-align: center">
-            <h5 style="margin-left: 30px;">生产跟踪</h5>
+
+          <div class="top_view">
+            <div style="width:30%;height:100%"></div>
+            <div style="width: 40%;text-align: center">
+              <h5 style="margin-left: 30px;">{{ title }}</h5>
+            </div>
+            <div style="width:30%">{{newDate}}</div>
           </div>
         </template>
+
 
         <template v-slot:bottom>
           <div style="width: 100%;display: flex;justify-content: center">
@@ -32,7 +38,6 @@
               />
             </div>
           </div>
-
         </template>
       </q-table>
     </div>
@@ -43,7 +48,7 @@
 // const fs = require('fs');
 // const {resolve} = require('path')
 export default {
-  name: "TEST",
+  name: "myTable",
   props: {
     separator: {
       type: String,
@@ -66,12 +71,12 @@ export default {
       default: null
     },
     tableStyle: {
-      type: Object,
-      default: null
+      type: String,
+      default: ""
     },
     cardStyle: {
-      type: Object,
-      default: null
+      type: String,
+      default: ""
     },
     pagination: {
       type: Object,
@@ -85,26 +90,25 @@ export default {
     time: {
       type: Number,
       default: 5
+    },
+    title: {
+      type: String,
     }
-
   },
   mounted() {
-    // fs.readFile("/Users/looper/Documents/code/project/electron-bd/package.json","utf8",(err,data) => {
-    //   console.log(err,data);
-    // })
-    // console.log('__dirname : ' + __dirname)
-    // console.log('resolve   : ' + resolve('./'))
-    // console.log('cwd       : ' + process.cwd())
-    // console.log(this.tbaledata);
-    console.log('time', this.time);
+    // console.log('time', this.time);
     this.timer = setInterval(() => {
-      // console.log('time',this.time);
+      // console.log('tab_time_interval',this.tab_time_interval);
       if (this.pagination_data.page === this.pagesNumber) {
         this.pagination_data.page = 1;
       } else {
         this.pagination_data.page++;
       }
     }, this.time * 1000);
+    let that = this
+    this.timer1 = setInterval(function () {
+      that.newDate = new Date().toLocaleString()
+    })
   },
   computed: {
     pagesNumber() {
@@ -113,13 +117,16 @@ export default {
   },
   beforeDestroy() {
     clearInterval(this.timer);
+    clearInterval(this.timer1);
     this.timer = null;
+    this.timer1 = null;
   },
   data() {
     return {
       tbaledata: this.data,
       pagination_data: this.pagination,
-      timer: null
+      timer: null,
+      newDate: new Date()
     }
   }
 }
@@ -132,5 +139,20 @@ export default {
 
 .full_but:hover {
   opacity: 1;
+}
+
+/*th {*/
+/*  font-size: 100px;*/
+/*}*/
+
+.headerClass {
+  font-size: 100px;
+}
+
+.top_view{
+  width:100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>
