@@ -72,30 +72,6 @@
                     <q-input v-model="props.row.name" dense autofocus counter/>
                   </q-popup-edit>
                 </q-td>
-<!--                <q-td key="text_size" :props="props">-->
-<!--                  {{ props.row.text_size }}-->
-<!--                  <q-popup-edit v-model="props.row.text_size">-->
-<!--                    <q-input v-model="props.row.text_size" dense autofocus counter/>-->
-<!--                  </q-popup-edit>-->
-<!--                </q-td>-->
-<!--                <q-td key="text_color" :props="props">-->
-<!--                  {{ props.row.text_color }}-->
-<!--                  <q-popup-edit v-model="props.row.text_color">-->
-<!--                    <q-input v-model="props.row.text_color" dense autofocus counter/>-->
-<!--                  </q-popup-edit>-->
-<!--                </q-td>-->
-<!--                <q-td key="background_color" :props="props">-->
-<!--                  {{ props.row.background_color }}-->
-<!--                  <q-popup-edit v-model="props.row.background_color">-->
-<!--                    <q-input v-model="props.row.background_color" dense autofocus counter/>-->
-<!--                  </q-popup-edit>-->
-<!--                </q-td>-->
-<!--                <q-td key="background_color_in_col" :props="props">-->
-<!--                  {{ props.row.background_color_in_col }}-->
-<!--                  <q-popup-edit v-model="props.row.background_color_in_col">-->
-<!--                    <q-input v-model="props.row.background_color_in_col" dense autofocus counter/>-->
-<!--                  </q-popup-edit>-->
-<!--                </q-td>-->
                 <q-td key="td_style" :props="props">
                   {{ props.row.td_style }}
                   <q-popup-edit v-model="props.row.td_style">
@@ -117,11 +93,13 @@
           <div>
             <div class="line_view">
               <div style="padding: 0 10px;font-size: 15px; width: 80px">批量td样式修改</div>
-              <el-input style="width:80%;" v-model="td_style" placeholder="请输入内容" @input="batchModTd"></el-input>
+              <el-input style="width:80%;" v-model="td_style" placeholder="请输入内容"></el-input>
+              <q-btn color="primary" label="覆盖" @click="batchModTd"/>
             </div>
             <div class="line_view">
               <div style="padding: 0 10px;font-size: 15px; width: 80px">批量th样式修改</div>
               <el-input style="width:80%;" v-model="th_style" placeholder="请输入内容"></el-input>
+              <q-btn color="primary" label="覆盖" @click="batchModTh"/>
             </div>
           </div>
         </q-tab-panel>
@@ -192,7 +170,7 @@ export default {
   },
   mounted() {
     this.getlocalStorageScoped();
-    if (this.data.length === 0){
+    if (this.data.length === 0) {
       let data = [];
       for (let col_name of this.settings.visibleColumns) {
         data.push({
@@ -215,13 +193,15 @@ export default {
     },
     getlocalStorageScoped() {
       this.settings = JSON.parse(localStorage.getItem("settings"));
-      if (this.settings.col_def_data){
+      if (this.settings.col_def_data) {
         this.data = this.settings.col_def_data;
       }
+      this.td_style = localStorage.getItem("td_style_record");
+      this.th_style = localStorage.getItem("th_style_record");
     },
     setlocalStorageScoped() {
       this.settings.col_def_data = this.data;
-      localStorage.setItem("settings",JSON.stringify(this.settings));
+      localStorage.setItem("settings", JSON.stringify(this.settings));
     },
     addRow() {
       this.data.push({
@@ -234,17 +214,23 @@ export default {
     removeRow() {
       this.data.pop();
     },
-    Refresh(){
+    Refresh() {
       this.refresh = false;
       this.$nextTick(() => {
         this.refresh = true;
       })
     },
-    batchModTd(){
-      for (let item of this.data){
+    batchModTd() {
+      for (let item of this.data) {
         item.td_style = this.td_style;
       }
-      // this.Refresh();
+      localStorage.setItem("td_style_record", this.td_style);
+    },
+    batchModTh() {
+      for (let item of this.data) {
+        item.th_style = this.th_style;
+      }
+      localStorage.setItem("th_style_record", this.th_style);
     }
   }
 }
